@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>EW26 — SaM Targets</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3348;
+    --text: #e8eaf6;
+    --text-dim: #8892b0;
+    --accent: #7c6af6;
+
+    --c-hire: #22c55e;
+    --c-hire-bg: rgba(34,197,94,0.12);
+    --c-partner: #60a5fa;
+    --c-partner-bg: rgba(96,165,250,0.12);
+    --c-product: #fb923c;
+    --c-product-bg: rgba(251,146,60,0.12);
+    --c-low: #6b7280;
+    --c-low-bg: rgba(107,114,128,0.12);
+    --c-competitor: #c084fc;
+    --c-competitor-bg: rgba(192,132,252,0.12);
+    --c-unknown: #facc15;
+    --c-unknown-bg: rgba(250,204,21,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    min-height: 100dvh;
+  }
+
+  /* ── Header ── */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px 10px;
+    padding-top: calc(12px + env(safe-area-inset-top));
+  }
+
+  .header-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .search-box {
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .search-box input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 12px 9px 36px;
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .search-box input::placeholder { color: var(--text-dim); }
+  .search-box input:focus { border-color: var(--accent); }
+  .search-icon {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    pointer-events: none;
+    font-size: 15px;
+  }
+
+  .filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+
+  .filter-group {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .filter-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s;
+    -webkit-appearance: none;
+  }
+  .filter-btn:active { transform: scale(0.96); }
+  .filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  /* ── Count bar ── */
+  .count-bar {
+    padding: 8px 16px;
+    font-size: 12px;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── List ── */
+  .list {
+    padding: 8px 12px 80px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+    -webkit-user-select: none;
+  }
+  .card:active { background: var(--surface2); border-color: var(--accent); }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .card-name {
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 1.3;
+    flex: 1;
+  }
+
+  .badge {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: .02em;
+    white-space: nowrap;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 7px;
+  }
+
+  .booth-tag {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+  .booth-tag .hall { color: var(--accent); }
+
+  .card-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    align-items: flex-end;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-height: 92dvh;
+    overflow-y: auto;
+    padding: 0 0 calc(24px + env(safe-area-inset-bottom));
+    animation: slideUp .25s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .modal-handle {
+    display: flex;
+    justify-content: center;
+    padding: 12px 0 8px;
+  }
+  .modal-handle-bar {
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+  }
+
+  .modal-header {
+    padding: 4px 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-company {
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 8px;
+  }
+  .modal-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .modal-body {
+    padding: 0 16px;
+  }
+
+  .section {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .section-value {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text);
+  }
+
+  .link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    margin-top: 4px;
+    margin-right: 8px;
+    transition: background .15s;
+  }
+  .link-btn:active { background: var(--border); }
+  .link-btn svg { flex-shrink: 0; }
+
+  .condition-legend {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    line-height: 1.4;
+    font-style: italic;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--text-dim);
+    font-size: 15px;
+  }
+
+  /* Condition colors */
+  .cond-hire    { color: var(--c-hire);       background: var(--c-hire-bg);       }
+  .cond-partner { color: var(--c-partner);    background: var(--c-partner-bg);    }
+  .cond-product { color: var(--c-product);    background: var(--c-product-bg);    }
+  .cond-low     { color: var(--c-low);        background: var(--c-low-bg);        }
+  .cond-comp    { color: var(--c-competitor); background: var(--c-competitor-bg); }
+  .cond-unknown { color: var(--c-unknown);    background: var(--c-unknown-bg);    }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">EW26 · SaM Targets</div>
+  <div class="search-box">
+    <span class="search-icon">⌕</span>
+    <input type="search" id="search" placeholder="Search company…" autocomplete="off" autocorrect="off" spellcheck="false">
+  </div>
+  <div class="filters" id="hall-filters"></div>
+  <div class="filters" id="cond-filters" style="margin-top:6px"></div>
+</div>
+
+<div class="count-bar" id="count-bar"></div>
+
+<div class="list" id="list"></div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <div class="modal-handle"><div class="modal-handle-bar"></div></div>
+    <div class="modal-header">
+      <div class="modal-company" id="m-company"></div>
+      <div class="modal-meta" id="m-meta"></div>
+    </div>
+    <div class="modal-body" id="m-body"></div>
+  </div>
+</div>
+
+<script>
+const DATA = [{"company": "Beckhoff Automation GmbH & Co. KG", "website": "https://www.beckhoff.com", "country": "Germany", "booth": "Hall 1 / 1-130", "hall": "Hall 1", "description": "Global leader in PC-based control & TwinCAT automation SW; industrial PCs, EtherCAT, FreeBSD/Windows embedded systems.", "hiring_signal": "Yes – 38+ roles (embedded SW dev, automation eng.)", "sam_pitch": "Embedded Linux/FreeBSD drivers for TwinCAT; ARM firmware optimisation for EtherCAT controllers.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/beckhoff-automation/", "linkedin_jobs": "? – Automation eng.; SW developer; Technical Sales Eng."}, {"company": "HMS Networks", "website": "https://www.hms-networks.com", "country": "Germany", "booth": "Hall 1 / 1-450", "hall": "Hall 1", "description": "Makes Anybus embedded interfaces, ixxat CAN modules, Beck IPC for fieldbus/Ethernet integration.", "hiring_signal": "Yes – 111 total roles listed", "sam_pitch": "Firmware for Anybus modules; Linux drivers for PROFINET/EtherCAT; BSP for Beck IPC.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/hmsnetworks/", "linkedin_jobs": "? – SW developer; Embedded eng.; Java backend"}, {"company": "PHOENIX CONTACT GmbH & Co. KG", "website": "https://www.phoenixcontact.com", "country": "Germany", "booth": "Hall 1 / 1-434", "hall": "Hall 1", "description": "Industrial automation & PLCnext edge-computing (Linux); 5G/WiFi6 modules, LoRaWAN, Proficloud.io.", "hiring_signal": "Yes – 66+ roles", "sam_pitch": "SaM has proven case study (Phoenix Contact QA); embedded Linux for PLCnext; wireless IoT firmware.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/phoenix-contact/", "linkedin_jobs": "? – Field app eng.; CRM dev; Automation eng."}, {"company": "Hilscher G. f. Systemautomation mbH", "website": "https://www.hilscher.com", "country": "Germany", "booth": "Hall 1 / 1-301", "hall": "Hall 1", "description": "35-yr expert in netX multiprotocol ASICs, gateway controllers, netFIELD edge-management platform.", "hiring_signal": "Yes – embedded SW developer roles (netX ARM Cortex, boot/debug/security)", "sam_pitch": "C/C++ firmware for netX ARM Cortex; Linux drivers; IoT edge-platform customisation.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/hilscher-automation/", "linkedin_jobs": "? – Embedded SW developer (netX, ARM Cortex-M/A)"}, {"company": "Deutschmann Automation GmbH & Co.KG", "website": "https://www.deutschmann.de", "country": "Germany", "booth": "Hall 2 / 2-140", "hall": "Hall 2", "description": "UNIGATE protocol converters and UNIGATE IC2 ARM modules for PROFINET/EtherCAT bridging.", "hiring_signal": "No confirmed 2024-25 postings", "sam_pitch": "Firmware for UNIGATE IC2 ARM; custom Industrial Ethernet protocol implementations.", "conditions": "Might need a product", "linkedin": "https://www.linkedin.com/company/deutschmann-automation-gmbh/", "linkedin_jobs": "0 – None found"}, {"company": "esd electronics gmbh", "website": "https://esd.eu", "country": "Germany", "booth": "Hall 1 / 1-121", "hall": "Hall 1", "description": "40-yr specialist in CAN/PROFIBUS/EtherCAT boards (AMC, CompactPCI, PCIe); PowerPC/ARM designs.", "hiring_signal": "No recent postings found", "sam_pitch": "Extend firmware capacity for CAN/fieldbus; Linux kernel drivers for embedded boards.", "conditions": "Low priority", "linkedin": "https://www.linkedin.com/company/esd-electronics-gmbh/", "linkedin_jobs": ""}, {"company": "Digi International GmbH", "website": "https://www.digi.com", "country": "Germany", "booth": "Hall 1 / 1-236", "hall": "Hall 1", "description": "IoT connectivity leader: ConnectCore SoMs, wireless modules, industrial routers; acquired Particle.", "hiring_signal": "Yes – 9 total worldwide roles", "sam_pitch": "Firmware for ConnectCore modules; custom embedded Linux BSP; cellular/WiFi stack.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/digi-international/", "linkedin_jobs": "? – Sr Applications Developer; embedded/networking roles"}, {"company": "InHand Networks", "website": "https://www.inhand.com", "country": "United States", "booth": "Hall 3 / 3-328", "hall": "Hall 3", "description": "IIoT leader: InGateway cellular routers, edge-computing devices, Modbus/OPC-UA cloud management.", "hiring_signal": "Unknown", "sam_pitch": "Embedded Linux firmware for InGateway; Modbus/OPC-UA drivers; remote device-management stack.", "conditions": "Unknown", "linkedin": "https://www.linkedin.com/company/inhand-networks/", "linkedin_jobs": "Check manually"}, {"company": "REVOLUTION PI, a KUNBUS brand", "website": "https://revolutionpi.com", "country": "Germany", "booth": "Hall 5 / 5-343", "hall": "Hall 5", "description": "Industrial Raspberry Pi (RevPi Connect 5, CM5, Debian Linux) in DIN-rail; PROFINET/EtherCAT/Modbus.", "hiring_signal": "Actively recruiting – specific postings not confirmed", "sam_pitch": "Custom Debian/Linux apps for RevPi; industrial protocol drivers; real-time extensions.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/kunbus-gmbh/", "linkedin_jobs": "? – Embedded Linux developer; industrial protocol eng."}, {"company": "MC Technologies GmbH", "website": "https://mc-technologies.com", "country": "Germany", "booth": "Hall 3 / 3-521", "hall": "Hall 3", "description": "Industrial 4G routers, M2M gateways, data terminals and wireless modules with custom firmware.", "hiring_signal": "Yes – Test Engineer (Python automation)", "sam_pitch": "Embedded firmware for cellular routers; 4G/5G stack; firmware QA.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/mc-technologies-gmbh/", "linkedin_jobs": "? – Test Engineer Electronics; embedded roles"}, {"company": "Allied Vision Technologies GmbH", "website": "https://www.alliedvision.com", "country": "Germany", "booth": "Hall 2 / 2-552", "hall": "Hall 2", "description": "Industrial cameras & machine-vision systems for inspection, medical, traffic & scientific imaging.", "hiring_signal": "Yes – multiple engineering roles", "sam_pitch": "Camera sensor integration & Linux drivers; ARM firmware for industrial imaging.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/allied-vision-technologies/", "linkedin_jobs": "? – Embedded Engineer; SW Engineer (imaging)"}, {"company": "MVTec Software GmbH", "website": "https://www.mvtec.com", "country": "Germany", "booth": "Hall 2 / 2-540", "hall": "Hall 2", "description": "Makes HALCON & MERLIC machine-vision platforms with 3D vision, deep learning, embedded vision.", "hiring_signal": "Yes – 242+ roles (engineering, sales, support)", "sam_pitch": "Embedded firmware for HALCON/MERLIC on ARM/x86; real-time image-processing optimisation.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/mvtec-software-gmbh/", "linkedin_jobs": "? – SW engineer; vision algorithm developer"}, {"company": "Network Optix", "website": "https://www.networkoptix.com", "country": "United States", "booth": "Hall 2 / 2-444", "hall": "Hall 2", "description": "Nx EVOS intelligent VMS with AI analytics; 4M+ devices, 190 countries; edge-to-cloud.", "hiring_signal": "Yes – 10+ roles (SW devs, engineers)", "sam_pitch": "Edge AI firmware for video processing; Nx EVOS on ARM edge servers.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/network-optix/", "linkedin_jobs": "? – Sr C++ Engineer; Technical Support; Integration Eng."}, {"company": "ADLINK Technology", "website": "https://www.adlinktech.com", "country": "Germany", "booth": "Hall 3 / 3-147", "hall": "Hall 3", "description": "Edge-computing: industrial IoT modules, fanless PCs, IoT gateways, AI platforms.", "hiring_signal": "Yes – 14+ roles", "sam_pitch": "Embedded Linux BSP for ADLINK COM modules; firmware for IoT gateways; kernel drivers.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/adlink-technology/", "linkedin_jobs": "? – Firmware Engineer; Embedded UEFI BIOS Firmware Eng.; RMA Technician"}, {"company": "Kontron Europe GmbH", "website": "https://www.kontron.com", "country": "Germany", "booth": "Hall 3 / 3-159", "hall": "Hall 3", "description": "Embedded computing, COMs, industrial motherboards, Box PCs; AI, 5G, edge-computing solutions.", "hiring_signal": "Yes – 82+ roles", "sam_pitch": "Custom BSP & embedded Linux for Kontron COMs; firmware for industrial IoT; RTOS optimisation.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/kontronag/", "linkedin_jobs": "? – Embedded SW engineer; BSP developer; Linux engineer"}, {"company": "congatec GmbH", "website": "https://www.congatec.com", "country": "Germany", "booth": "Hall 3 / 3-241", "hall": "Hall 3", "description": "Leading COM supplier (COM-HPC, COM Express, SMARC, Qseven) and SBCs.", "hiring_signal": "Yes – 4+ technical positions", "sam_pitch": "Embedded Linux BSP & kernel porting for congatec COMs; custom BSPs across architectures.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/congatec/", "linkedin_jobs": "? – BSP developer; embedded Linux engineer"}, {"company": "Phytec Messtechnik GmbH", "website": "https://www.phytec.eu", "country": "Germany", "booth": "Hall 4 / 4-327", "hall": "Hall 4", "description": "ARM Cortex SOMs (NXP, TI, Xilinx) with customisation; off-the-shelf & bespoke modules.", "hiring_signal": "Yes – 1 confirmed role (Embedded Linux Developer)", "sam_pitch": "PROVEN PARTNER — previous BSP project. Pitch Yocto/Buildroot, kernel customisation, driver dev.", "conditions": "Looking for devpartner", "linkedin": "https://www.linkedin.com/company/phytec-messtechnik-gmbh/", "linkedin_jobs": "1 – Embedded Linux Developer"}, {"company": "F&S Elektronik Systeme GmbH", "website": "https://www.fs-net.de", "country": "Germany", "booth": "Hall 2 / 2-240", "hall": "Hall 2", "description": "Secure embedded solutions for medical & industrial on NXP i.MX modules; Yocto/Buildroot Linux.", "hiring_signal": "Unknown – no postings confirmed", "sam_pitch": "Embedded Linux BSP for medical/industrial NXP platforms; Yocto customisation; secure firmware.", "conditions": "Might need a product", "linkedin": "https://www.linkedin.com/company/f-s-elektronik-systeme-gmbh/", "linkedin_jobs": "0 – None found"}, {"company": "Shelly DACH GmbH", "website": "https://www.shelly.com", "country": "Germany", "booth": "Hall 4 / 4-222", "hall": "Hall 4", "description": "IoT/smart-home devices (28M+ units): switches, relays, sensors; Bulgarian HQ, German DACH subsidiary.", "hiring_signal": "Yes – 1 confirmed role (Firmware Developer)", "sam_pitch": "Firmware for smart-home devices; 3rd-party platform integration. SaM iHaus case study relevant.", "conditions": "Might need a product", "linkedin": "https://www.linkedin.com/company/shellygroup/", "linkedin_jobs": "1 – Firmware Developer"}, {"company": "Peeriot GmbH", "website": "https://peeriot.io", "country": "Germany", "booth": "Hall 2 / 2-639g", "hall": "Hall 2", "description": "Deep-tech startup: decentralised IoT middleware & low-code suite for autonomous edge data architectures.", "hiring_signal": "Unknown", "sam_pitch": "Embedded Linux for IoT gateway devices; real-time edge-data firmware.", "conditions": "Might need a product", "linkedin": "https://de.linkedin.com/company/peeriot/", "linkedin_jobs": "0 – None found"}, {"company": "ELATEC GmbH", "website": "https://www.elatec-rfid.com", "country": "Germany", "booth": "Hall 3 / 3-121", "hall": "Hall 3", "description": "Universal RFID/NFC readers (TWN4) supporting 60+ technologies; BLE/NFC for access control.", "hiring_signal": "Yes – accepting applications (SW devs, embedded specialists)", "sam_pitch": "Firmware for RFID/NFC readers; embedded Linux for ELATEC gateways; secure identity firmware.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/elatec-gmbh/", "linkedin_jobs": "? – Embedded SW developer; RFID firmware eng."}, {"company": "ICY BOX by RaidSonic Technology GmbH", "website": "https://icybox.de", "country": "Germany", "booth": "Hall 3 / 3-596", "hall": "Hall 3", "description": "Storage accessories: external SSDs, docking stations, RAID; German design & quality.", "hiring_signal": "Active hiring but non-technical (recruiter, social media)", "sam_pitch": "Limited SW angle; possible NAS firmware or smart-storage Linux.", "conditions": "Low priority", "linkedin": "https://www.linkedin.com/company/raidsonic-technology-gmbh/", "linkedin_jobs": ""}, {"company": "CyberWhiz IoT Cyber Security", "website": "https://www.cyberwhiz.co.uk", "country": "Turkey", "booth": "Hall 5 / 5-374", "hall": "Hall 5", "description": "Embedded HW security & mobile-app security libraries; 24/7 cloud monitoring; CRA/RED/PSTI compliance.", "hiring_signal": "Unknown", "sam_pitch": "Embedded Linux kernel-level security modules; C/C++ security agents for IoT; QA for nanoWAF.", "conditions": "Might need a product", "linkedin": "https://www.linkedin.com/company/cyberwhiz-iot-cyber-security/", "linkedin_jobs": "0 – None found"}, {"company": "Giesecke+Devrient Mobile Security Germany GmbH", "website": "https://www.gi-de.com", "country": "Germany", "booth": "Hall 3 / 3-622a", "hall": "Hall 3", "description": "Global SecurityTech: digital security, payment systems, mobile-security HW/SW for telecom & e-payments.", "hiring_signal": "Yes – multiple embedded/security roles", "sam_pitch": "Embedded Linux drivers; ARM security firmware; IoT security device development.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/giesecke-devrient/", "linkedin_jobs": "? – Embedded SW developer; Security engineer"}, {"company": "INTEGRITY Security Services", "website": "https://www.ghsiss.com", "country": "United States", "booth": "Hall 4A / 4A-501", "hall": "Hall 4A", "description": "Embedded IoT security: cryptographic toolkits, V2X certificate management, supply-chain security.", "hiring_signal": "Yes – embedded security engineers (crypto eng., firmware dev.)", "sam_pitch": "Firmware & embedded security for cryptographic toolkits on ARM/x86.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/integrity-security-services-llc/", "linkedin_jobs": "? – Embedded security eng.; cryptographic firmware dev."}, {"company": "Red Balloon Security", "website": "https://redballoonsecurity.com", "country": "United States", "booth": "Hall 5 / 5-272b", "hall": "Hall 5", "description": "Firmware hardening: Symbiote (runtime intrusion), OFRAK (binary analysis), ABR/BSR for critical infra.", "hiring_signal": "Yes – Reverse Engineer, Product Engineer, firmware security", "sam_pitch": "Firmware dev & embedded security for OFRAK platform; C/C++ firmware hardening.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/red-balloon-security/", "linkedin_jobs": "? – Reverse Engineer; Product Eng.; Firmware Security"}, {"company": "dSPACE GmbH", "website": "https://www.dspace.com", "country": "Germany", "booth": "Hall 4 / 4-438", "hall": "Hall 4", "description": "HIL test systems, SCALEXIO rapid-prototyping, real-time simulation for autonomous/EV vehicles.", "hiring_signal": "Yes – 1000+ total; confirmed Embedded SW Developer (C/C++, Python, Linux)", "sam_pitch": "Embedded SW for simulation platforms; real-time Linux; autonomous-driving validation tools.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/dspace-group/", "linkedin_jobs": "? – Embedded SW Developer; Simulation engineer; Linux developer"}, {"company": "OpenSynergy GmbH", "website": "https://www.opensynergy.com", "country": "Germany", "booth": "Hall 4 / 4-502a", "hall": "Hall 4", "description": "COQOS automotive hypervisor, Bluetooth SDKs, radio-tuner solutions; 350M vehicles worldwide.", "hiring_signal": "Yes – multiple roles (Embedded Validation Eng., Senior Embedded SW Eng., Berlin)", "sam_pitch": "Embedded Linux & Bluetooth firmware; AUTOSAR development; SDV integration.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/opensynergy-gmbh/", "linkedin_jobs": "? – Embedded Validation Eng.; Sr Embedded SW Eng."}, {"company": "Qorix GmbH", "website": "https://www.qorix.ai", "country": "Germany", "booth": "Hall 4 / 4-442", "hall": "Hall 4", "description": "SDV middleware: AUTOSAR Classic/Adaptive + proprietary Performance middleware; 300 employees.", "hiring_signal": "Yes – 1 confirmed role", "sam_pitch": "Embedded SW components for AUTOSAR stacks; SDV platform firmware development.", "conditions": "Might need a product", "linkedin": "https://www.linkedin.com/company/qorix/", "linkedin_jobs": "1 – Automotive Middleware Tech Lead"}, {"company": "emgarde", "website": "https://emgarde.de", "country": "Germany", "booth": "Hall 2 / 2-632", "hall": "Hall 2", "description": "TTModeler Pro + embedded cybersecurity tools for threat modelling and security design.", "hiring_signal": "No recent postings found", "sam_pitch": "Embedded firmware QA & security testing for emgarde tooling.", "conditions": "Low priority", "linkedin": "https://www.linkedin.com/company/emgarde/", "linkedin_jobs": ""}, {"company": "Intrepid Control Systems GmbH", "website": "https://intrepidcs.com", "country": "Germany", "booth": "Hall 4 / 4-620", "hall": "Hall 4", "description": "World leader in automotive Ethernet tools; Vehicle Spy SW + neoVI/ValueCAN HW for CAN/LIN/J1939.", "hiring_signal": "Yes – DevOps Engineer; past embedded/Linux roles posted", "sam_pitch": "Embedded firmware & device drivers for automotive network test tools.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/intrepidcontrol/", "linkedin_jobs": "? – DevOps Eng.; Sr C++ SW Eng.; Firmware roles"}, {"company": "b-plus GmbH", "website": "https://www.b-plus.com", "country": "Germany", "booth": "Hall 4 / 4-621", "hall": "Hall 4", "description": "230+ engineers; HW/SW for ADAS, autonomous driving & mobile-machine automation (DATALynx ATX4).", "hiring_signal": "Yes – active careers page (embedded dev., automotive eng.)", "sam_pitch": "Embedded Linux, firmware & ADAS SW for autonomous driving platforms.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/b-plus-group/", "linkedin_jobs": "? – Embedded developer; Automotive SW eng."}, {"company": "Autovion Technologies", "website": "https://autoviontech.com", "country": "Germany", "booth": "Hall 2 / 2-637e", "hall": "Hall 2", "description": "AI-driven OSS governance, SBOM generation & EU regulatory compliance for software-defined vehicles.", "hiring_signal": "Unknown", "sam_pitch": "Embedded firmware; OSS compliance tooling for SDV; embedded QA & security validation.", "conditions": "Might need a product", "linkedin": "https://www.linkedin.com/company/autovion-technologies/", "linkedin_jobs": "Check manually"}, {"company": "RRC power solutions GmbH", "website": "https://www.rrc-ps.com", "country": "Germany", "booth": "Hall 1 / 1-219", "hall": "Hall 1", "description": "Mobile power supplies for medical, military & industrial; 10+ yr availability guarantee.", "hiring_signal": "Recruiting sales roles; no embedded dev postings found", "sam_pitch": "BMS embedded firmware; power-supply optimisation for portable/medical/drone applications.", "conditions": "Might need a product", "linkedin": "https://www.linkedin.com/company/rrc-power-solutions-gmbh/", "linkedin_jobs": "0 – None found"}, {"company": "Quantum-Systems GmbH", "website": "https://quantum-systems.com", "country": "Germany", "booth": "Hall 3 / 3-652b", "hall": "Hall 3", "description": "350+ employees; eVTOL drones for defence & geospatial; €100M+ revenue.", "hiring_signal": "Yes – confirmed 2 roles (Embedded SW Eng. – Autopilot, Embedded SW Eng. – N3XT Dept.)", "sam_pitch": "Real-time embedded Linux & flight-control firmware; ARM Cortex-M autopilot dev.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/quantum-systems-gmbh/", "linkedin_jobs": "2 – Embedded SW Engineer – Autopilot; Embedded SW Engineer – N3XT Dept."}, {"company": "Prodrive Technologies B.V.", "website": "https://prodrive-technologies.com", "country": "Netherlands", "booth": "Hall 3 / 3-279", "hall": "Hall 3", "description": "OEM high-end embedded systems & mechatronics for automotive, medical, energy & industrial.", "hiring_signal": "Yes – 14 total jobs; Embedded Electrical Eng., embedded computing dev.", "sam_pitch": "Custom embedded Linux drivers; firmware for industrial & automotive platforms.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/prodrivetechnologies/", "linkedin_jobs": "? – Embedded Electrical Eng.; Embedded Computing dev."}, {"company": "Innatera Nanosystems BV", "website": "https://innatera.com", "country": "Netherlands", "booth": "Hall 3A / 3A-430", "hall": "Hall 3A", "description": "TU Delft spin-off: neuromorphic MCUs using spiking neural networks; 500× efficiency vs conventional.", "hiring_signal": "Yes – more open IT roles than any time in past 12 months", "sam_pitch": "Firmware for low-power neuromorphic processors; embedded inference & sensor-integration SDK.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/innatera/", "linkedin_jobs": "? – Head of Platforms; Embedded firmware roles"}, {"company": "Ginzinger electronic systems GmbH", "website": "https://www.ginzinger.com", "country": "Austria", "booth": "Hall 4 / 4-263", "hall": "Hall 4", "description": "Full-service embedded systems house; own GELin embedded Linux OS; HW dev, SW, HMI, series production.", "hiring_signal": "Yes – actively recruiting iMX/DDR3/USB HW devs + Embedded Linux SW devs", "sam_pitch": "Embedded Linux BSP customisation; kernel driver dev; HMI firmware.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/ginzinger-electronic-systems-gmbh/", "linkedin_jobs": "? – Embedded Linux SW developer; HW developer (iMX)"}, {"company": "HAINZL Industriesysteme GmbH", "website": "https://www.hainzl.at", "country": "Austria", "booth": "Hall 3 / 3-378", "hall": "Hall 3", "description": "€750M system integrator: embedded systems, motion & drives, fluid power, electronics manufacturing.", "hiring_signal": "Yes – 32+ open positions", "sam_pitch": "Embedded systems integration; firmware for industrial automation & motion-control platforms.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/hainzl-industriesysteme-gmbh/", "linkedin_jobs": "? – Junior SW Developer; Elektroniker; Eng. roles"}, {"company": "S.I.E - System Industrie Electronic GmbH", "website": "https://www.sie.at", "country": "Austria", "booth": "Hall 1 / 1-564", "hall": "Hall 1", "description": "Embedded & cyber-physical systems specialist for medical, industrial & security; SYNTHERA PCs, SYNEXIS HMI.", "hiring_signal": "Yes – apprentices, dual students & experienced specialists", "sam_pitch": "Nearshore embedded firmware & safety-critical SW for SYNTHERA/SYNEXIS platforms.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/systemindustrieelectronic/", "linkedin_jobs": "? – Embedded SW specialist; apprentice programs"}, {"company": "GroupAlarm // cubos Internet GmbH", "website": "https://www.groupalarm.com", "country": "Germany", "booth": "Hall 3 / 3-652", "hall": "Hall 3", "description": "VdS 10000-certified alerting & critical-communications platform for emergency services since 2001.", "hiring_signal": "No recent postings found", "sam_pitch": "Mobile app & real-time communication stack optimisation.", "conditions": "Low priority", "linkedin": "https://www.linkedin.com/company/groupalarm/", "linkedin_jobs": ""}, {"company": "Metirionic GmbH", "website": "https://metirionic.com", "country": "Germany", "booth": "Hall 4 / 4-580", "hall": "Hall 4", "description": "Wireless distance-measurement & RTLS: MARS Ranging Stack for Bluetooth, UWB, IEEE 802.15.4.", "hiring_signal": "Yes – active jobs page (metirionic.com/jobs)", "sam_pitch": "BLE/UWB/wireless connectivity firmware; RTLS sensor-network integration.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/metirionic/", "linkedin_jobs": "? – Wireless firmware eng.; RTLS developer"}, {"company": "Apollo Green Solutions", "website": "https://www.apollo-gs.com", "country": "Germany", "booth": "Hall 2 / 2-637g", "hall": "Hall 2", "description": "AI-powered energy-management platform for PV parks, batteries, HVAC; real-time monitoring.", "hiring_signal": "Yes – BD intern posted; won Energie AG Start-Up Innovation Challenge 2025", "sam_pitch": "Embedded firmware for smart-energy management HW; IoT sensor integration.", "conditions": "Might need a product", "linkedin": "https://www.linkedin.com/company/apollo-gs/", "linkedin_jobs": "0 – None found (BD intern only)"}, {"company": "Linux Automation GmbH", "website": "https://linux-automation.com", "country": "Germany", "booth": "Hall 4 / 4-261", "hall": "Hall 4", "description": "Manufacturer of embedded Linux dev-tools: USB-SD-Mux, USB multiplexers, test-automation controllers.", "hiring_signal": "Unknown", "sam_pitch": "Embedded Linux testing infrastructure; possible dev partner for manufacturing optimisation.", "conditions": "Unknown", "linkedin": "https://www.linkedin.com/company/linux-automation-gmbh/", "linkedin_jobs": "Check manually"}, {"company": "emlix GmbH", "website": "https://emlix.com", "country": "Germany", "booth": "Hall 4 / 4-336", "hall": "Hall 4", "description": "25-yr industrial embedded Linux: 400+ customers; automotive, energy, medical; SIL2/ASILB certified.", "hiring_signal": "Yes – Embedded Linux Kernel Developer, System Engineer; more IT roles than past 6 months", "sam_pitch": "Nearshore dev partner for kernel drivers, BSP customisation, safety-critical firmware.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/emlix-gmbh/", "linkedin_jobs": "? – Embedded Linux Kernel Developer; System Engineer (embedded Linux)"}, {"company": "Fidus Systems", "website": "https://fidus.com", "country": "Canada", "booth": "Hall 5 / 5-128", "hall": "Hall 5", "description": "Electronic product design & dev services: embedded SW, FPGA, hardware, PCB layout for aerospace, medical.", "hiring_signal": "Yes – engineering roles (embedded SW, FPGA, HW)", "sam_pitch": "Nearshore firmware dev & embedded Linux BSP; firmware QA for FPGA & HW projects.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/fidus-systems/", "linkedin_jobs": "? – Embedded SW Eng.; FPGA Eng.; HW Eng."}, {"company": "Blue Clover Devices", "website": "https://bcdevices.com", "country": "United States", "booth": "Hall 4 / 4-640b", "hall": "Hall 4", "description": "IoT ODM: firmware dev, HW engineering, PCB assembly, cloud-native test automation; NFC, BLE, WiFi, cellular.", "hiring_signal": "Unknown – no postings found", "sam_pitch": "Firmware dev & QA for IoT devices; cellular embedded verification.", "conditions": "Unknown", "linkedin": "https://www.linkedin.com/company/blue-clover-devices/", "linkedin_jobs": "0 – None found"}, {"company": "Edge Impulse Inc.", "website": "https://www.edgeimpulse.com", "country": "United States", "booth": "Hall 3 / 3-191", "hall": "Hall 3", "description": "MLOps platform (Qualcomm, 2025) for TinyML: model training, optimisation, inference on edge devices.", "hiring_signal": "Yes – multiple developer/engineer roles", "sam_pitch": "Custom firmware & BSP for embedded ML; C/C++ inference optimisation on ARM/x86/ESP32.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/edgeimpulse/", "linkedin_jobs": "? – ML Engineer; Embedded SW developer"}, {"company": "Octavo Systems", "website": "https://octavosystems.com", "country": "United States", "booth": "Hall 3 / 3-160", "hall": "Hall 3", "description": "System-in-Package semiconductors: TI Sitara/AM62x/STM32MP with memory, PMIC & passives for IoT/AI.", "hiring_signal": "Unknown", "sam_pitch": "Embedded Linux BSP & kernel driver dev for SiP products.", "conditions": "Might need a product", "linkedin": "https://www.linkedin.com/company/octavo-systems-llc/", "linkedin_jobs": "0 – None found"}, {"company": "Sealevel Systems, Inc.", "website": "https://www.sealevel.com", "country": "United States", "booth": "Hall 3 / 3-448", "hall": "Hall 3", "description": "Industrial I/O & embedded computing: ruggedised computers, USB/Ethernet I/O, SeaCloud IIoT; made-in-USA.", "hiring_signal": "Yes – 4+ roles (HW Eng., FPGA Eng., SW Eng.)", "sam_pitch": "Firmware & embedded Linux for industrial computers; C/C++ for I/O products and SeaCloud.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/sealevel-systems-inc/", "linkedin_jobs": "? – HW Eng.; FPGA Eng.; SW Eng."}, {"company": "Diamond Systems Corporation", "website": "https://www.diamondsystems.com", "country": "United States", "booth": "Hall 2 / 2-350", "hall": "Hall 2", "description": "Rugged embedded computing (SBCs, COMs) for military, aerospace & medical; PC/104, COM Express, Jetson.", "hiring_signal": "No confirmed embedded postings in last 30d", "sam_pitch": "Embedded Linux drivers & firmware for BSPs; QA for rugged computing platforms.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/diamond-systems-30/", "linkedin_jobs": "0 – None found"}, {"company": "Embedded Wizard (TARA Systems)", "website": "https://www.embedded-wizard.de", "country": "Germany", "booth": "Hall 4 / 4-247", "hall": "Hall 4", "description": "GUI dev platform for resource-constrained MCUs/MPUs; Chora language; 100M+ devices shipped.", "hiring_signal": "Yes – developer roles (C/C++, embedded systems)", "sam_pitch": "Embedded C/C++ backend firmware & device drivers for customers using Embedded Wizard GUI.", "conditions": "Might need a product", "linkedin": "https://www.linkedin.com/company/tara-systems-gmbh/", "linkedin_jobs": "? – C/C++ Embedded developer"}, {"company": "NewTec GmbH", "website": "https://www.newtec.de", "country": "Germany", "booth": "Hall 5 / 5-170", "hall": "Hall 5", "description": "Functional safety, embedded security & safe-AI integration for automotive, industrial, medical, railway; 300+ employees.", "hiring_signal": "Yes – 2 confirmed roles in last 30d", "sam_pitch": "Nearshore firmware dev capacity; embedded Linux services for automotive/industrial projects.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/newtec-gmbh-system-entwicklung-und-beratung/", "linkedin_jobs": "2 – Firmware Developer (FPGA/Embedded SW); Embedded SW Engineer"}, {"company": "Pengutronix e.K.", "website": "https://www.pengutronix.de", "country": "Germany", "booth": "Hall 4 / 4-261", "hall": "Hall 4", "description": "Embedded Linux consultancy: mainline kernel dev, Yocto/PTXdist BSP, labgrid test automation.", "hiring_signal": "Yes – BSP Integration, Linux Graphics Developer", "sam_pitch": "Partnership: SaM handles application/product-layer while Pengutronix owns kernel/BSP.", "conditions": "Competitor", "linkedin": "https://www.linkedin.com/company/pengutronix/", "linkedin_jobs": ""}, {"company": "Knowledge Resources GmbH", "website": "https://www.knowres.com", "country": "Switzerland", "booth": "Hall 5 / 5-215", "hall": "Hall 5", "description": "FPGA SoM vendor: AMD Versal, Xilinx RFSoC, Altera Agilex modules for RF, radar, quantum, HPC.", "hiring_signal": "Yes – Electronics Eng., PCB Layout, Senior Eng. roles", "sam_pitch": "Firmware & embedded SW for FPGA SoM platforms; C/C++ for RF and edge-computing.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/knowledge-resources-gmbh/", "linkedin_jobs": "? – Electronics Eng.; PCB Layout Eng.; Senior Eng."}, {"company": "AVSystem", "website": "https://avsystem.com", "country": "Poland", "booth": "Hall 5 / 5-382", "hall": "Hall 5", "description": "IoT/LwM2M device-management platform (Coiote) + embedded client firmware; ~200 employees.", "hiring_signal": "Yes – confirmed Embedded SW Eng. (C, LwM2M/CoAP/DTLS) + Technical PM (Embedded) in 2025; 0 in last 30d window", "sam_pitch": "Embedded C firmware for LwM2M/CoAP clients; nearshore scale-up for IoT client SDK; QA automation.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/avsystem/", "linkedin_jobs": "0 – None in last 30d (active hiring confirmed broader)"}, {"company": "LMT IoT", "website": "https://lmt-iot.com", "country": "Latvia", "booth": "Hall 3A / 3A-629", "hall": "Hall 3A", "description": "Part of Latvia's top mobile operator LMT; cellular LPWAN IoT module + OEM kits (HW+FW+SDK+cloud).", "hiring_signal": "Unknown", "sam_pitch": "Embedded firmware & SDK for IoT module platform; LTE-M/NB-IoT scale-up; mobile app dev.", "conditions": "Looking for devpartner", "linkedin": "https://www.linkedin.com/company/lmt-iot/", "linkedin_jobs": "0 – None found"}, {"company": "Actasys LTD", "website": "https://www.theactasys.com", "country": "Israel", "booth": "Hall 2 / 2-412f", "hall": "Hall 2", "description": "ActaJet™ sensor-cleaning actuators for autonomous vehicles; backed by Volvo Cars Tech Fund ($8.75M).", "hiring_signal": "No recent embedded postings found", "sam_pitch": "Embedded firmware for actuator control; sensor health diagnostics SW; AUTOSAR integration.", "conditions": "Unknown", "linkedin": "https://www.linkedin.com/company/actasys-inc/", "linkedin_jobs": "0 – None found"}, {"company": "Instrumentation Technologies d.o.o.", "website": "https://www.i-tech.si", "country": "Slovenia", "booth": "Hall 4 / 4-449", "hall": "Hall 4", "description": "Particle-accelerator beam instrumentation (Libera, 4000+ systems at 60+ labs) and Red Pitaya FPGA platform.", "hiring_signal": "Unknown – niche scientific instruments", "sam_pitch": "Embedded Linux BSP/driver dev for Red Pitaya; FPGA-Linux integration; QA for measurement systems.", "conditions": "Unknown", "linkedin": "https://www.linkedin.com/company/instrumentation-technologies/", "linkedin_jobs": "Check manually"}, {"company": "Advanced Security Technologies", "website": "https://ast.co.rs", "country": "Serbia", "booth": "Hall 3 / 3-333", "hall": "Hall 3", "description": "Cybersecurity product company (Serbia): nanoWAF AI — kernel-level adaptive AI security for IIoT/embedded at 1M+ device scale.", "hiring_signal": "Unknown", "sam_pitch": "Embedded Linux kernel-level security module dev; C/C++ security agents; QA for nanoWAF.", "conditions": "Looking for devpartner", "linkedin": "https://www.linkedin.com/company/advanced-security-technologies-ltd/", "linkedin_jobs": "0 – None found"}, {"company": "Embedded AI", "website": "Unknown", "country": "Germany", "booth": "Hall 5 / 5-110", "hall": "Hall 5", "description": "Could not identify specific company — name suggests AI inference / edge-AI solutions for embedded.", "hiring_signal": "Unknown", "sam_pitch": "Edge AI deployment on ARM/MCU; C/C++ inference optimisation; Linux driver dev.", "conditions": "Unknown", "linkedin": "Unknown", "linkedin_jobs": "Check manually"}, {"company": "Ferrous Systems GmbH", "website": "https://ferrous-systems.com", "country": "Germany", "booth": "Hall 4 / 4-402", "hall": "Hall 4", "description": "Berlin Rust consultancy; created Ferrocene — first qualified Rust compiler for safety-critical embedded (ISO 26262, IEC 61508, IEC 62304).", "hiring_signal": "Yes – BSP Integration, Linux dev roles", "sam_pitch": "Partnership: SaM handles C/C++ product layer; Ferrous owns safety-qualified Rust compiler layer.", "conditions": "Competitor", "linkedin": "https://www.linkedin.com/company/ferrous-systems/", "linkedin_jobs": ""}, {"company": "1GLOBAL", "website": "https://www.1global.com", "country": "Netherlands", "booth": "Hall 3 / 3-625", "hall": "Hall 3", "description": "Fully regulated MVNO & eSIM/IoT connectivity provider in 190+ countries; 450+ employees.", "hiring_signal": "Hiring network/signalling engineers — not embedded device dev", "sam_pitch": "Embedded IoT SDK dev for eSIM/SIM integration; modem firmware integration.", "conditions": "Low priority", "linkedin": "https://www.linkedin.com/company/1global/", "linkedin_jobs": ""}, {"company": "NODKA AUTOMATION TECHNOLOGY", "website": "https://nodka.com", "country": "Netherlands", "booth": "Hall 3 / 3-263", "hall": "Hall 3", "description": "Chinese manufacturer (Shanghai HQ, NL office): industrial Panel PCs, HMI, embedded PCs; OEM/ODM.", "hiring_signal": "No EU embedded hiring — R&D in China", "sam_pitch": "BSP/Linux customisation for Panel PC line; HMI software layer.", "conditions": "Low priority", "linkedin": "https://www.linkedin.com/company/nodka/", "linkedin_jobs": ""}, {"company": "AUMOVIO Engineering Solutions", "website": "https://engineering-solutions.aumovio.com", "country": "Germany", "booth": "Hall 5 / 5-376", "hall": "Hall 5", "description": "Continental AG spin-off (2025); 1800+ automotive engineers; embedded SW, brake systems, autonomous driving.", "hiring_signal": "Active hiring at scale", "sam_pitch": "Subcontract overflow embedded Linux/C; nearshore delivery for AUMOVIO client projects.", "conditions": "Competitor", "linkedin": "https://www.linkedin.com/company/aumovio/", "linkedin_jobs": ""}, {"company": "ITK Engineering GmbH", "website": "https://www.itk-engineering.de", "country": "Germany", "booth": "Hall 5 / 5-187", "hall": "Hall 5", "description": "Bosch subsidiary (~1200 engineers); SW & systems engineering for automotive, industrial, medical, railway.", "hiring_signal": "Actively hiring — multiple embedded SW positions", "sam_pitch": "Subcontracting embedded Linux/C dev for overflow capacity.", "conditions": "Competitor", "linkedin": "https://www.linkedin.com/company/itk-engineering-gmbh/", "linkedin_jobs": ""}, {"company": "Bosch Sensortec GmbH", "website": "https://www.bosch-sensortec.com", "country": "Germany", "booth": "Hall 4A / 4A-512", "hall": "Hall 4A", "description": "Bosch subsidiary: MEMS sensors (IMU, environmental, hearables) for consumer electronics & IoT.", "hiring_signal": "Yes – 2 confirmed roles in last 30d (Internship Embedded SW)", "sam_pitch": "Embedded SDK/driver dev for sensor integration; BSP for reference platforms; QA automation.", "conditions": "Hiring developers", "linkedin": "https://www.linkedin.com/company/bosch-sensortec/", "linkedin_jobs": "2 – Internship Embedded Software (×2)"}, {"company": "Rx Networks Inc.", "website": "https://rxnetworks.com", "country": "Canada", "booth": "Hall 3 / 3-417", "hall": "Hall 3", "description": "GNSS positioning SW & cloud correction (TruePoint); 2B+ devices; Mobile Suite Library for chipset integration.", "hiring_signal": "No embedded-specific postings", "sam_pitch": "Embedded C library/SDK for GNSS chipset integration; mobile app for positioning.", "conditions": "Unknown", "linkedin": "https://www.linkedin.com/company/rx-networks/", "linkedin_jobs": "0 – None found"}, {"company": "Ligna Energy AB", "website": "https://www.lignaenergy.com", "country": "Sweden", "booth": "Hall 2 / 2-230", "hall": "Hall 2", "description": "Swedish cleantech: organic supercapacitors from forest biomass for IoT sensors; 10MSEK bridge round (2023).", "hiring_signal": "No developer hiring found", "sam_pitch": "Very limited — possibly BMS/energy-harvesting firmware; too early-stage.", "conditions": "Low priority", "linkedin": "https://www.linkedin.com/company/ligna-energy-ab/", "linkedin_jobs": ""}];
+
+const CONDITION_LEGEND = {
+  "Hiring developers":    "Actively posting embedded/firmware roles → pitch nearshore capacity",
+  "Looking for devpartner": "Builds embedded products, likely needs a SW outsourcing partner → warm lead",
+  "Might need a product": "Product roadmap hints at embedded SW need → explore",
+  "Low priority":         "Hardware-only, services-only, or wrong geography → skip or quick pass",
+  "Competitor":           "Embedded dev shop → approach only as potential sub-contractor",
+  "Unknown":              "No public hiring data → worth a short cold conversation at the booth"
+};
+
+function condClass(c) {
+  const map = {
+    "Hiring developers":     "cond-hire",
+    "Looking for devpartner":"cond-partner",
+    "Might need a product":  "cond-product",
+    "Low priority":          "cond-low",
+    "Competitor":            "cond-comp",
+    "Unknown":               "cond-unknown"
+  };
+  return map[c] || "cond-unknown";
+}
+
+const HALLS = ["All", ...Array.from(new Set(DATA.map(d => d.hall))).sort()];
+const CONDITIONS = ["All", "Hiring developers", "Looking for devpartner", "Might need a product", "Low priority", "Competitor", "Unknown"];
+
+let activeHall = "All";
+let activeCond = "All";
+let searchQ = "";
+
+function renderFilters() {
+  const hf = document.getElementById("hall-filters");
+  const cf = document.getElementById("cond-filters");
+
+  hf.innerHTML = HALLS.map(h =>
+    `<button class="filter-btn ${activeHall===h?'active':''}" data-hall="${h}">${h}</button>`
+  ).join("");
+
+  cf.innerHTML = CONDITIONS.map(c =>
+    `<button class="filter-btn ${activeCond===c?'active':''} ${c!=='All'?condClass(c):''}" data-cond="${c}">${c==='All'?'All Conditions':c}</button>`
+  ).join("");
+
+  hf.querySelectorAll(".filter-btn").forEach(btn =>
+    btn.addEventListener("click", () => { activeHall = btn.dataset.hall; renderFilters(); renderList(); })
+  );
+  cf.querySelectorAll(".filter-btn").forEach(btn =>
+    btn.addEventListener("click", () => { activeCond = btn.dataset.cond; renderFilters(); renderList(); })
+  );
+}
+
+function filtered() {
+  const q = searchQ.toLowerCase();
+  return DATA.filter(d => {
+    if (activeHall !== "All" && d.hall !== activeHall) return false;
+    if (activeCond !== "All" && d.conditions !== activeCond) return false;
+    if (q && !(d.company.toLowerCase().includes(q) || d.description.toLowerCase().includes(q) || d.booth.toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+function renderList() {
+  const items = filtered();
+  const list = document.getElementById("list");
+  document.getElementById("count-bar").textContent = `${items.length} of ${DATA.length} companies`;
+
+  if (!items.length) {
+    list.innerHTML = `<div class="empty">No companies match your filters.</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map((d, i) => {
+    const idx = DATA.indexOf(d);
+    return `<div class="card" data-idx="${idx}">
+      <div class="card-top">
+        <div class="card-name">${esc(d.company)}</div>
+        <span class="badge ${condClass(d.conditions)}">${esc(d.conditions)}</span>
+      </div>
+      <div class="card-meta">
+        <span class="booth-tag"><span class="hall">${esc(d.hall)}</span> · ${esc(d.booth)}</span>
+        ${d.country ? `<span class="booth-tag">${esc(d.country)}</span>` : ''}
+      </div>
+      <div class="card-desc">${esc(d.description)}</div>
+    </div>`;
+  }).join("");
+
+  list.querySelectorAll(".card").forEach(card =>
+    card.addEventListener("click", () => openModal(DATA[+card.dataset.idx]))
+  );
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function linkBtn(url, label, icon) {
+  if (!url) return '';
+  return `<a href="${url}" target="_blank" rel="noopener" class="link-btn">${icon} ${label}</a>`;
+}
+
+function openModal(d) {
+  document.getElementById("m-company").textContent = d.company;
+
+  const meta = document.getElementById("m-meta");
+  meta.innerHTML = `
+    <span class="badge ${condClass(d.conditions)}">${esc(d.conditions)}</span>
+    <span class="booth-tag"><span class="hall">${esc(d.hall)}</span> · ${esc(d.booth)}</span>
+    ${d.country ? `<span class="booth-tag">${esc(d.country)}</span>` : ''}
+  `;
+
+  const sections = [];
+
+  if (d.description) sections.push(`
+    <div class="section">
+      <div class="section-label">What they do</div>
+      <div class="section-value">${esc(d.description)}</div>
+    </div>`);
+
+  if (d.sam_pitch) sections.push(`
+    <div class="section">
+      <div class="section-label">SaM Pitch</div>
+      <div class="section-value">${esc(d.sam_pitch)}</div>
+    </div>`);
+
+  if (d.hiring_signal) sections.push(`
+    <div class="section">
+      <div class="section-label">Hiring Signal</div>
+      <div class="section-value">${esc(d.hiring_signal)}</div>
+    </div>`);
+
+  if (d.linkedin_jobs) sections.push(`
+    <div class="section">
+      <div class="section-label">LinkedIn Jobs (30d)</div>
+      <div class="section-value">${esc(d.linkedin_jobs)}</div>
+    </div>`);
+
+  const legend = CONDITION_LEGEND[d.conditions];
+  sections.push(`
+    <div class="section">
+      <div class="section-label">Condition</div>
+      <div class="section-value"><span class="badge ${condClass(d.conditions)}">${esc(d.conditions)}</span></div>
+      ${legend ? `<div class="condition-legend">${esc(legend)}</div>` : ''}
+    </div>`);
+
+  const links = [
+    linkBtn(d.website, 'Website', '🌐'),
+    linkBtn(d.linkedin, 'LinkedIn', 'in'),
+  ].filter(Boolean).join('');
+
+  if (links) sections.push(`
+    <div class="section">
+      <div class="section-label">Links</div>
+      <div style="margin-top:4px">${links}</div>
+    </div>`);
+
+  document.getElementById("m-body").innerHTML = sections.join('');
+  document.getElementById("modal-overlay").classList.add("open");
+  document.getElementById("modal").scrollTop = 0;
+}
+
+// Close modal
+document.getElementById("modal-overlay").addEventListener("click", e => {
+  if (e.target === document.getElementById("modal-overlay")) closeModal();
+});
+
+// Swipe down to close
+let touchStartY = 0;
+document.getElementById("modal").addEventListener("touchstart", e => { touchStartY = e.touches[0].clientY; }, {passive:true});
+document.getElementById("modal").addEventListener("touchend", e => {
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (dy > 80 && document.getElementById("modal").scrollTop < 5) closeModal();
+}, {passive:true});
+
+function closeModal() {
+  document.getElementById("modal-overlay").classList.remove("open");
+}
+
+// Search
+document.getElementById("search").addEventListener("input", e => {
+  searchQ = e.target.value.trim();
+  renderList();
+});
+
+renderFilters();
+renderList();
+</script>
+</body>
+</html>
